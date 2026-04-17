@@ -1,65 +1,140 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import SiteNav from '@/components/site-nav';
+import PostCard from '@/components/post-card';
+import PostEditor from '@/components/post-editor';
+import PostDetail from '@/components/post-detail';
+import JournalPrompt from '@/components/journal-prompt';
+import { SITES } from '@/types';
+import type { SiteMode, Post } from '@/types';
+import { detectSiteModeFromHost } from '@/lib/site';
+
+export default function HomePage() {
+  const [site, setSite] = useState<SiteMode>('journal');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [detailPost, setDetailPost] = useState<Post | null>(null);
+  const [initialBody, setInitialBody] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const host = window.location.hostname;
+    setSite(detectSiteModeFromHost(host));
+  }, []);
+
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/posts?site=${site}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setPosts(data);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [site]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  function handleWrite(promptText?: string) {
+    setInitialBody(promptText ? `\n\n---\n${promptText}` : '');
+    setEditorOpen(true);
+  }
+
+  function handleSaved(post: Post) {
+    setPosts((prev) => {
+      const existing = prev.findIndex((p) => p.id === post.id);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = post;
+        return updated;
+      }
+      return [post, ...prev];
+    });
+  }
+
+  const config = SITES[site];
+
+  const filtered = search.trim()
+    ? posts.filter(
+        (p) =>
+          p.title.toLowerCase().includes(search.toLowerCase()) ||
+          p.body.toLowerCase().includes(search.toLowerCase()) ||
+          p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())) ||
+          p.highlights.some((h) => h.toLowerCase().includes(search.toLowerCase()))
+      )
+    : posts;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{config.title}</h1>
+          <p className="text-sm text-muted-foreground">{config.subtitle}</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <Button size="sm" onClick={() => handleWrite()}>
+          + 새 글
+        </Button>
+      </div>
+
+      <SiteNav current={site} />
+
+      <Separator />
+
+      {/* Journal Prompt */}
+      {site === 'journal' && <JournalPrompt onWrite={handleWrite} />}
+
+      {/* Search */}
+      <Input
+        placeholder="검색..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="max-w-xs h-8"
+      />
+
+      {/* Posts Grid */}
+      {loading ? (
+        <p className="text-muted-foreground text-center py-12">불러오는 중...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground text-center py-12">
+          {search ? '검색 결과가 없습니다.' : '아직 글이 없습니다. 첫 번째 글을 작성해보세요!'}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onClick={() => setDetailPost(post)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* Editor */}
+      <PostEditor
+        site={site}
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        onSaved={handleSaved}
+        initialBody={initialBody}
+      />
+
+      {/* Detail */}
+      <PostDetail
+        post={detailPost}
+        open={!!detailPost}
+        onClose={() => setDetailPost(null)}
+      />
+    </main>
   );
 }
