@@ -18,7 +18,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
 
   return (
     <Card
-      className="cursor-pointer hover:ring-2 hover:ring-foreground/10 transition-all overflow-hidden"
+      className="cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all overflow-hidden rounded-xl"
       onClick={onClick}
     >
       {firstImage && (

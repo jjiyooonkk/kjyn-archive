@@ -12,10 +12,10 @@ interface JournalPromptProps {
 }
 
 const categoryColors: Record<PromptCategory, string> = {
-  question: 'bg-amber-100 text-amber-800',
-  bible: 'bg-violet-100 text-violet-800',
-  math: 'bg-blue-100 text-blue-800',
-  science: 'bg-emerald-100 text-emerald-800',
+  question: 'bg-amber-100/80 text-amber-900',
+  bible: 'bg-stone-200/80 text-stone-800',
+  math: 'bg-sky-100/80 text-sky-900',
+  science: 'bg-emerald-100/80 text-emerald-900',
 };
 
 export default function JournalPrompt({ onWrite }: JournalPromptProps) {
@@ -45,7 +45,7 @@ export default function JournalPrompt({ onWrite }: JournalPromptProps) {
           )}
         </div>
 
-        <p className="text-lg font-medium leading-relaxed">{prompt.text}</p>
+        <p className="text-lg font-heading leading-relaxed">{prompt.text}</p>
 
         {prompt.answer && (
           <div>

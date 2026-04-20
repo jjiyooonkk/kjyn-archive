@@ -8,10 +8,10 @@ interface SiteNavProps {
 }
 
 const colorMap: Record<string, string> = {
-  amber: 'bg-amber-500',
-  blue: 'bg-blue-500',
-  rose: 'bg-rose-500',
-  emerald: 'bg-emerald-500',
+  amber: 'bg-amber-600',
+  blue: 'bg-sky-700',
+  rose: 'bg-rose-400',
+  emerald: 'bg-emerald-700',
 };
 
 export default function SiteNav({ current }: SiteNavProps) {
