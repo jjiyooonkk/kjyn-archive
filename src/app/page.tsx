@@ -18,6 +18,7 @@ export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
   const [detailPost, setDetailPost] = useState<Post | null>(null);
   const [initialBody, setInitialBody] = useState('');
   const [search, setSearch] = useState('');
@@ -45,8 +46,19 @@ export default function HomePage() {
   }, [fetchPosts]);
 
   function handleWrite(promptText?: string) {
+    setEditingPost(undefined);
     setInitialBody(promptText ? `\n\n---\n${promptText}` : '');
     setEditorOpen(true);
+  }
+
+  function handleEdit(post: Post) {
+    setEditingPost(post);
+    setInitialBody('');
+    setEditorOpen(true);
+  }
+
+  function handleDeleted(id: string) {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
   function handleSaved(post: Post) {
@@ -124,16 +136,20 @@ export default function HomePage() {
       <PostEditor
         site={site}
         open={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => { setEditorOpen(false); setEditingPost(undefined); }}
         onSaved={handleSaved}
+        existing={editingPost}
         initialBody={initialBody}
       />
 
       {/* Detail */}
       <PostDetail
         post={detailPost}
+        site={site}
         open={!!detailPost}
         onClose={() => setDetailPost(null)}
+        onEdit={handleEdit}
+        onDeleted={handleDeleted}
       />
     </main>
   );
