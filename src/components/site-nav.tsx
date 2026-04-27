@@ -12,6 +12,7 @@ const colorMap: Record<string, string> = {
   blue: 'bg-sky-700',
   rose: 'bg-rose-400',
   emerald: 'bg-emerald-700',
+  violet: 'bg-violet-500',
 };
 
 export default function SiteNav({ current }: SiteNavProps) {

@@ -5,6 +5,7 @@ const SUBDOMAIN_MAP: Record<string, SiteMode> = {
   brand: 'brand',
   design: 'design',
   space: 'space',
+  exhibition: 'exhibition',
 };
 
 export function detectSiteModeFromHost(host: string): SiteMode {

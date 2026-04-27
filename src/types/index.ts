@@ -1,4 +1,4 @@
-export type SiteMode = 'journal' | 'brand' | 'design' | 'space';
+export type SiteMode = 'journal' | 'brand' | 'design' | 'space' | 'exhibition';
 
 export interface SiteConfig {
   mode: SiteMode;
@@ -31,6 +31,12 @@ export const SITES: Record<SiteMode, SiteConfig> = {
     title: 'Space',
     subtitle: '공간 기록',
     color: 'emerald',
+  },
+  exhibition: {
+    mode: 'exhibition',
+    title: 'Exhibition',
+    subtitle: '전시 기록',
+    color: 'violet',
   },
 };
 
